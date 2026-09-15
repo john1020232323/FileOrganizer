@@ -1,0 +1,8 @@
+# Python Cache
+__pycache__/
+
+# Local testing folder
+Test_Folder/
+
+# User-specific categories
+category.csv

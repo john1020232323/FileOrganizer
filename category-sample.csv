@@ -1,0 +1,15 @@
+extension,category
+.pdf,Documents
+.png,Images
+.exe,Applications
+.mp3,Audio
+.jpg,Images
+.mp4,Videos
+.txt,Documents
+.pptx,Documents
+.docx,Documents
+.test,Testfolder
+.mkv,Videos
+.tar.gz,Archive
+.min.js,Code
+,Code
