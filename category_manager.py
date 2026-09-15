@@ -5,7 +5,7 @@ def load():
     try:
         with open('category.csv', 'r') as file:
             reader = csv.DictReader(file)
-            categories = {row['extension']: row['category'] for row in reader}
+            categories = {row['extension']: row['category'] for row in reader if row['extension'] and row['category']}
             return categories
     except FileNotFoundError:
         return {}
