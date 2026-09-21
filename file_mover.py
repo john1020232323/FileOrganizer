@@ -22,32 +22,23 @@ def move(new_path, source, choice):
             continue
 
         suffix = "".join(file.suffixes)
-        if not suffix and file.is_file() and choice == "y":
-            print("Moving files with no extension")
-            destination = new_path / "Organized" / "No Extension" / file.name
-        elif suffix not in categories.keys():
-            continue
-        else:
-            destination = new_path / "Organized" / categories.get(suffix, "Unknown") / file.name
+        if suffix not in categories and (suffix != "" or choice == "n"):
+            continue    
         num = 1
 
         while True:
-            num += 1
-            
-            if file.is_file() and not destination.resolve().exists():
+            category = "No Extension" if suffix == "" and choice == "y" else categories.get(suffix, "Unknown")
+            if num == 1:
+                destination = new_path / "Organized" / category / file.name
+            if not destination.resolve().exists():
                 shutil.move(file.resolve(), destination.resolve())
-                if not suffix:
-                    moved.append({file.name: 'No Extension'})
-                elif suffix:
-                    moved.append({file.name: categories[suffix]})
+                moved.append({file.name: 'No Extension'} if suffix == "" else {file.name: categories[suffix]})
                 print(f"Moved: {file.name}")
                 break
-            
 
-            if suffix:
-                destination = new_path / "Organized" / categories.get(suffix, "Unkown") / f"{((file.stem).split("."))[0]}_{num}{suffix}"
-            elif not suffix and choice == 'y':
-                destination = new_path / "Organized" / 'No Extension' / f"{file.name}_{num}"         
+            num += 1
+            destination = new_path / "Organized" / category / f"{((file.stem).split("."))[0]}_{num}{suffix}"
+
     result(moved, new_path)
 
 
@@ -59,7 +50,7 @@ def result(moved, new_path):
 
 def destination(source, choice):
     while True:
-        destination = input("Destination Path (q to exit): ").strip()
+        destination = input("\nDestination Path (q to exit): ").strip()
         if destination == 'q':
             break
         new_path = Path(destination)

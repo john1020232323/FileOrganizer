@@ -18,12 +18,10 @@ def display():
 
 def menu():
     while True:
-        print("=========================================================")
         categories = load()
         if not categories:
             print("\nNo extensions added yet")
-            if not confirm():
-                break
+            break
         else:
             display()
             if not confirm():
@@ -107,7 +105,7 @@ def delete():
             toDelete = input("ID to delete (q to exit): " ).strip()
             if toDelete == "q":
                 break
-            elif toDelete not in str(categories.keys()):
+            elif toDelete not in str(categories):
                 raise ValueError("Error: ID not in the list")
         except ValueError as e:
             print(e)

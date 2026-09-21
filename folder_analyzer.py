@@ -90,8 +90,4 @@ def get_path():
         if path.is_dir():
             return path
         else:
-            print(path, "not found or is not a valid directory/folder")
-        
-              
-def test():
-    print("This runs!")
+            print(path, "not found or is not a valid directory/path")
