@@ -1,6 +1,34 @@
 import shutil
+import threading
+import time
+import sys
+
 from category_manager import load
 from pathlib import Path
+
+def global_loading_screen(global_stop_signal):
+    timed_out = not global_stop_signal.wait(timeout=5)
+
+    if timed_out:
+        print("\n==================================================")
+        print("[BATCH NOTICE: Processing a very large folder...]")
+        print("==================================================")
+        
+
+def file_loading_screen(file_stop_signal, filename):
+    timed_out = not file_stop_signal.wait(timeout=5)
+
+    if timed_out:
+        print(f"Large file detected: {filename}")
+        animation = ["|", "/", "--", "\\"]
+        idx = 0
+        while not file_stop_signal.is_set():
+            sys.stdout.write(f"\rMoving {filename}... {animation[idx % len(animation)]}")
+            sys.stdout.flush()
+            idx += 1
+            time.sleep(0.1)
+        sys.stdout.write("\r" + " " * 40 + "\r")
+        sys.stdout.flush()
 
 def create_folder(path, choice):
     categories = load()
@@ -17,27 +45,40 @@ def move(new_path, source, choice):
     create_folder(new_path, choice)
     moved = []
 
-    for file in source.iterdir():
-        if not file.is_file():
-            continue
+    global_stop_signal = threading.Event()
+    global_thread = threading.Thread(target=global_loading_screen, args=(global_stop_signal,))
+    global_thread.start()
+    try:
+        for file in source.iterdir():
+            if not file.is_file():
+                continue
 
-        suffix = "".join(file.suffixes)
-        if suffix not in categories and (suffix != "" or choice == "n"):
-            continue    
-        num = 1
+            suffix = "".join(file.suffixes)
+            if suffix not in categories and (suffix != "" or choice == "n"):
+                continue    
+            num = 1
 
-        while True:
-            category = "No Extension" if suffix == "" and choice == "y" else categories.get(suffix, "Unknown")
-            if num == 1:
-                destination = new_path / "Organized" / category / file.name
-            if not destination.resolve().exists():
-                shutil.move(file.resolve(), destination.resolve())
-                moved.append({file.name: 'No Extension'} if suffix == "" else {file.name: categories[suffix]})
-                print(f"Moved: {file.name}")
-                break
+            while True:
+                category = "No Extension" if suffix == "" and choice == "y" else categories.get(suffix, "Unknown")
+                if num == 1:
+                    destination = new_path / "Organized" / category / file.name
+                if not destination.resolve().exists():
+                    file_stop_signal = threading.Event()
+                    file_thread = threading.Thread(target=file_loading_screen, args=(file_stop_signal, file.name))
+                    file_thread.start()
+                    try:
+                        shutil.move(file.resolve(), destination.resolve())
+                    finally:
+                        file_stop_signal.set()
+                        file_thread.join()
+                    moved.append({file.name: 'No Extension'} if suffix == "" else {file.name: categories[suffix]})
+                    break
 
-            num += 1
-            destination = new_path / "Organized" / category / f"{((file.stem).split("."))[0]}_{num}{suffix}"
+                num += 1
+                destination = new_path / "Organized" / category / f"{((file.stem).split("."))[0]}_{num}{suffix}"
+    finally:
+        global_stop_signal.set()
+        global_thread.join()
 
     result(moved, new_path)
 

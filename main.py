@@ -1,4 +1,5 @@
 import category_manager
+
 from sys import exit
 from folder_analyzer import dir_details
 
